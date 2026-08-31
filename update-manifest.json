@@ -3,5 +3,5 @@
   "date": "2026-09-01",
   "releaseNotes": "v0.1.5: 一键自动热更新（下载→安装→退出→重启）；支持 GitHub Release 远程下载",
   "msiPath": "https://github.com/kenny23233/kenny/releases/download/v0.1.5/本地工具箱_0.1.5_x64_zh-CN.msi",
-  "msiSizeBytes": 204419196
+  "msiSizeBytes": 204415100
 }

@@ -1,16 +1,15 @@
 [package]
 name = "local-toolbox"
 version = "0.1.5"
-description = "本地工具箱 - PSD/PSB 转 PNG, NCM 解密, 图片水印, 视频下载"
+description = "本地工具�?- PSD/PSB �?PNG, NCM 解密, 图片水印, 视频下载"
 authors = ["you"]
 edition = "2021"
 rust-version = "1.77"
-# 显式指定默认 run 目标, 避免 cargo run 在有 [lib] + [[bin]] 时报错歧义
-default-run = "video-toolbox"
+# 显式指定默认 run 目标, 避免 cargo run 在有 [lib] + [[bin]] 时报错歧�?default-run = "video-toolbox"
 
 [lib]
 name = "video_toolbox_lib"
-# desktop 只需要 rlib; 删掉 staticlib/cdylib 可以让 desktop 编译更快
+# desktop 只需�?rlib; 删掉 staticlib/cdylib 可以�?desktop 编译更快
 crate-type = ["rlib"]
 
 [[bin]]
