@@ -1,0 +1,62 @@
+# Rust / Cargo
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/gen/
+src-tauri/.cargo/
+
+# Node / npm
+node_modules/
+dist/
+.vite/
+
+# Tauri
+src-tauri/WixTools/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+release/
+*.exe
+*.msi
+*.nsis
+*.app
+*.dmg
+*.deb
+*.AppImage
+
+# Logs
+*.log
+logs/
+
+# User data (本地开发时产生的)
+%APPDATA%/video-toolbox/
+
+# 临时
+tmp/
+*.tmp
+*.bak
+
+# Debug 临时文件
+_check_*.ts
+_fb.log
+_fe_*.log
+_npm_install.log
+_release.log
+_release.log.err
+build.log
+_c3.err
+_cargo_build.log.err
+_check2.err
+_check_now.err
+_final_it.err
+_full_check.err
+_full_test.err
+_it_run.err
+_test2.err
+src-tauri/bin/bgutil/build/generate_once.js

@@ -1,0 +1,28 @@
+{
+  "name": "local-toolbox",
+  "private": true,
+  "version": "0.1.4",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "build:release": "powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1",
+    "smoke-test": "powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/plugin-dialog": "^2.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

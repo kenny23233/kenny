@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Toolbox</title>
+    <!--
+      Font strategy:
+      - macOS / iOS: real SF Pro via -apple-system (system font).
+      - Windows: Segoe UI Variable / Segoe UI is the native fallback.
+      - Inter (Google Fonts) is the cross-platform SF Pro approximation.
+        If Google Fonts is slow/blocked in CN, install Inter locally and
+        drop the <link>, or rely on Segoe UI directly.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

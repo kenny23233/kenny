@@ -1,0 +1,54 @@
+[package]
+name = "local-toolbox"
+version = "0.1.4"
+description = "本地工具箱 - PSD/PSB 转 PNG, NCM 解密, 图片水印, 视频下载"
+authors = ["you"]
+edition = "2021"
+rust-version = "1.77"
+# 显式指定默认 run 目标, 避免 cargo run 在有 [lib] + [[bin]] 时报错歧义
+default-run = "video-toolbox"
+
+[lib]
+name = "video_toolbox_lib"
+# desktop 只需要 rlib; 删掉 staticlib/cdylib 可以让 desktop 编译更快
+crate-type = ["rlib"]
+
+[[bin]]
+name = "video-toolbox"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["stream"] }
+futures-util = "0.3"
+rusqlite = { version = "0.32", features = ["bundled"] }
+anyhow = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tracing-appender = "0.2"
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1"
+url = "2.5"
+image = { version = "0.25", features = ["png", "jpeg", "webp"] }
+zip = "2"
+md5 = "0.7"
+flate2 = "1"
+base64 = "0.22"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+# 关闭增量编译 (release 默认就是 false, 显式声明以便排查)
+incremental = false

@@ -1,0 +1,7 @@
+{
+  "version": "0.1.0",
+  "date": "2025-08-31",
+  "releaseNotes": "初始版本：支持 YouTube / B站 / 微博 / 小红书 等主流平台；内置 yt-dlp + ffmpeg；bgutil POT server 反爬绕过；MSI 安装包。",
+  "msiPath": "E:\\projects\\video-toolbox\\src-tauri\\target\\release\\bundle\\msi\\Video Toolbox_0.1.0_x64_zh-CN.msi",
+  "msiSizeBytes": 203912704
+}
