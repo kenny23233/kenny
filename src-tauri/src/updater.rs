@@ -302,3 +302,87 @@ pub async fn download_and_install(app: tauri::AppHandle, msi_path: String) -> Re
 
     Ok(())
 }
+
+/// 全自动热更新：下载 → 静默安装 → 退出旧版 → 启动新版
+/// 一步到位，前端只调一次即可
+#[tauri::command]
+pub async fn auto_install_and_restart(
+    app: tauri::AppHandle,
+    msi_path: String,
+) -> Result<(), String> {
+    use std::process::Command;
+
+    emit_progress(&app, DownloadProgress {
+        percent: 0.0,
+        downloaded_bytes: 0,
+        total_bytes: None,
+        status: "downloading".to_string(),
+        message: "正在准备更新...".to_string(),
+    });
+
+    // 1. 下载 MSI
+    let final_path: String;
+    if is_http_url(&msi_path) {
+        let parsed_url = url::Url::parse(&msi_path)
+            .map_err(|e| format!("解析 URL 失败: {}", e))?;
+        let url_path = parsed_url.path();
+        let filename = std::path::Path::new(url_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("Update.msi");
+
+        let temp_dir = std::env::temp_dir().join("local-toolbox-updates");
+        std::fs::create_dir_all(&temp_dir)
+            .map_err(|e| format!("创建临时目录失败: {}", e))?;
+        let dest = temp_dir.join(filename);
+        final_path = dest.to_string_lossy().to_string();
+        download_file(&msi_path, &dest, None, &app).await?;
+    } else {
+        final_path = msi_path;
+        let p = PathBuf::from(&final_path);
+        if !p.exists() {
+            return Err(format!("MSI 文件不存在: {}", final_path));
+        }
+    }
+
+    // 2. 获取当前 exe 路径（安装完后会覆盖此文件）
+    let current_exe = std::env::current_exe()
+        .map_err(|e| format!("无法获取当前 exe 路径: {}", e))?
+        .to_string_lossy()
+        .to_string();
+
+    emit_progress(&app, DownloadProgress {
+        percent: 100.0,
+        downloaded_bytes: 0,
+        total_bytes: None,
+        status: "installing".to_string(),
+        message: "下载完成，即将自动安装并重启...".to_string(),
+    });
+
+    // 3. 通过 cmd 调度：等待 2 秒（让当前 app 退出） → 静默安装 → 启动新版
+    //    /passive 显示进度但不阻塞 /norestart 不强制重启
+    let script = format!(
+        "timeout /t 2 /nobreak >nul & msiexec /i \"{}\" /passive /norestart & start \"\" \"{}\"",
+        final_path, current_exe
+    );
+
+    Command::new("cmd")
+        .args(["/C", &script])
+        .spawn()
+        .map_err(|e| format!("调度安装失败: {}", e))?;
+
+    // 4. 给前端一个 emit 通知正在退出
+    emit_progress(&app, DownloadProgress {
+        percent: 100.0,
+        downloaded_bytes: 0,
+        total_bytes: None,
+        status: "finished".to_string(),
+        message: "正在退出旧版，安装完成后会自动启动新版...".to_string(),
+    });
+
+    // 5. 等待一小会儿让 emit 传完，然后退出
+    tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+    app.exit(0);
+
+    Ok(())
+}

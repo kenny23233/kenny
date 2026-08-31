@@ -110,6 +110,7 @@ pub fn run() {
             updater::open_msi_folder,
             updater::get_app_data_dir,
             updater::download_and_install,
+            updater::auto_install_and_restart,
             commands::tools::extract_psd_layers,
             commands::tools::convert_ncm,
             commands::tools::apply_image_watermark,

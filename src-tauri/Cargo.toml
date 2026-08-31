@@ -1,6 +1,6 @@
 [package]
 name = "local-toolbox"
-version = "0.1.4"
+version = "0.1.5"
 description = "本地工具箱 - PSD/PSB 转 PNG, NCM 解密, 图片水印, 视频下载"
 authors = ["you"]
 edition = "2021"

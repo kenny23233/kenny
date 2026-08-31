@@ -123,6 +123,11 @@ export function downloadAndInstall(msiPath: string): Promise<void> {
   return invoke<void>("download_and_install", { msiPath });
 }
 
+/** 全自动热更新：下载 → 静默安装 → 退出旧版 → 自动启动新版（一步到位） */
+export function autoInstallAndRestart(msiPath: string): Promise<void> {
+  return invoke<void>("auto_install_and_restart", { msiPath });
+}
+
 /** 下载进度事件类型 */
 export interface DownloadProgress {
   percent: number;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import {
   checkUpdate,
-  downloadAndInstall,
+  autoInstallAndRestart,
   errMsg,
   formatBytes,
   getAppDataDir,
@@ -121,12 +121,13 @@ function UpdateChecker() {
       downloaded_bytes: 0,
       total_bytes: result.manifest.msiSizeBytes ?? null,
       status: "downloading",
-      message: "正在启动安装程序...",
+      message: "正在准备更新...",
     });
     try {
-      await downloadAndInstall(result.manifest.msiPath);
+      // 一键自动化：下载 → 静默安装 → 退出旧版 → 启动新版
+      await autoInstallAndRestart(result.manifest.msiPath);
     } catch (e) {
-      show("安装失败: " + errMsg(e));
+      show("自动更新失败: " + errMsg(e));
       setInstalling(false);
       setProgress(null);
     }
@@ -181,7 +182,11 @@ function UpdateChecker() {
             onClick={handleInstall}
             disabled={!result.updateAvailable || installing}
           >
-            {installing ? "安装中..." : result.updateAvailable ? "安装新版本" : "已是最新"}
+            {installing
+              ? "下载/安装/重启中..."
+              : result.updateAvailable
+                ? "🚀 立即更新并自动重启"
+                : "已是最新"}
           </button>
         )}
       </div>
@@ -231,10 +236,10 @@ function UpdateChecker() {
             marginBottom: 6,
           }}
         >
-          ✅ {progress?.message ?? "安装程序已启动"}
+          ✅ {progress?.message ?? "更新完成"}
           <br />
           <span style={{ color: "#9ca3af" }}>
-            请等待安装完成，然后重新打开应用
+            旧版正在退出，新版安装完成后会自动启动...
           </span>
         </div>
       )}
