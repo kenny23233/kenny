@@ -150,6 +150,62 @@ pub async fn get_app_data_dir(app: tauri::AppHandle) -> Result<String, String> {
     Ok(data_dir.to_string_lossy().to_string())
 }
 
+/// 简单的百分号解码（处理 %XX 形式的编码）
+fn percent_decode(s: &str) -> String {
+    let bytes = s.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let (Some(h), Some(l)) = (
+                (bytes[i + 1] as char).to_digit(16),
+                (bytes[i + 2] as char).to_digit(16),
+            ) {
+                out.push((h * 16 + l) as u8);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).to_string()
+}
+
+/// 把 URL 路径里的非 ASCII 字符做百分号编码（reqwest 不接受裸中文 URL）
+fn percent_encode_url(url: &str) -> String {
+    if let Ok(parsed) = url::Url::parse(url) {
+        // 保留 schema + host，重新拼 path（已编码）+ query
+        let scheme = parsed.scheme();
+        let host = parsed.host_str().unwrap_or("");
+        let port = parsed.port().map(|p| format!(":{}", p)).unwrap_or_default();
+        let encoded_path = parsed.path()
+            .split('/')
+            .map(|seg| {
+                if seg.is_empty() {
+                    String::new()
+                } else {
+                    // 用 url crate 提供的编码
+                    seg.chars().map(|c| {
+                        if c.is_ascii() && c != '%' {
+                            c.to_string()
+                        } else {
+                            let mut buf = [0u8; 4];
+                            let s = c.encode_utf8(&mut buf);
+                            s.bytes().map(|b| format!("%{:02X}", b)).collect::<String>()
+                        }
+                    }).collect::<String>()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("/");
+        let query = parsed.query().map(|q| format!("?{}", q)).unwrap_or_default();
+        format!("{}://{}{}{}{}", scheme, host, port, encoded_path, query)
+    } else {
+        url.to_string()
+    }
+}
+
 /// 判断 msi_path 是否为 HTTP/HTTPS URL
 fn is_http_url(path: &str) -> bool {
     path.starts_with("http://") || path.starts_with("https://")
@@ -168,7 +224,7 @@ async fn download_file(
         .map_err(|e| format!("创建 HTTP 客户端失败: {}", e))?;
 
     let response = client
-        .get(url)
+        .get(&percent_encode_url(url))
         .send()
         .await
         .map_err(|e| format!("下载请求失败: {}", e))?;
@@ -256,14 +312,16 @@ pub async fn download_and_install(app: tauri::AppHandle, msi_path: String) -> Re
     let final_path: String;
 
     if is_http_url(&msi_path) {
-        // 从 URL 提取文件名
+        // 从 URL 提取文件名（处理百分号编码）
         let parsed_url = url::Url::parse(&msi_path)
             .map_err(|e| format!("解析 URL 失败: {}", e))?;
         let url_path = parsed_url.path();
-        let filename = std::path::Path::new(url_path)
+        // 解析百分号编码 (reqwest 不接受非 ASCII URL)
+        let decoded_path = percent_decode(&url_path);
+        let filename = std::path::Path::new(&decoded_path)
             .file_name()
             .and_then(|n| n.to_str())
-            .unwrap_or("VideoToolbox.msi");
+            .unwrap_or("Update.msi");
 
         let temp_dir = std::env::temp_dir().join("video-toolbox-updates");
         std::fs::create_dir_all(&temp_dir)
