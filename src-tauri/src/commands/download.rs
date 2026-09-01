@@ -214,3 +214,38 @@ pub async fn cancel_download(
 pub fn register_state(app: &AppHandle) {
     app.manage(ActiveDownloads::default());
 }
+
+/// 用系统默认浏览器打开 URL（用于第三方解析网站）
+/// 比如把抖音视频 URL 拼到 dlpanda.com 后打开，让用户在浏览器里点下载
+#[tauri::command]
+pub async fn open_in_browser(url: String) -> Result<(), String> {
+    if url.trim().is_empty() {
+        return Err("URL 不能为空".to_string());
+    }
+    tracing::info!("open_in_browser: {}", url);
+
+    #[cfg(target_os = "windows")]
+    {
+        // Windows: 用 rundll32 调 url.dll 打开默认浏览器
+        std::process::Command::new("rundll32")
+            .args(["url.dll,FileProtocolHandler", &url])
+            .spawn()
+            .map_err(|e| format!("打开浏览器失败: {}", e))?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("打开浏览器失败: {}", e))?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("打开浏览器失败: {}", e))?;
+    }
+
+    Ok(())
+}

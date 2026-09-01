@@ -48,6 +48,11 @@ export function cancelDownload(downloadId: string): Promise<void> {
   return invoke<void>("cancel_download", { downloadId });
 }
 
+/** 用系统默认浏览器打开 URL（用于 dlpanda 等第三方解析网站） */
+export function openInBrowser(url: string): Promise<void> {
+  return invoke<void>("open_in_browser", { url });
+}
+
 export function listenProgress(
   downloadId: string,
   onEvent: (e: ProgressEvent) => void,

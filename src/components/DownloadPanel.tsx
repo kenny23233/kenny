@@ -6,6 +6,7 @@ import {
   formatBytes,
   formatDuration,
   listenProgress,
+  openInBrowser,
   pickDefaultFormat,
   probeUrl,
   startDownload,
@@ -118,6 +119,29 @@ export function DownloadPanel({ urlSeed, defaultSaveDir = "" }: Props) {
     }
   }
 
+  /** 第三方解析服务：把当前 URL 拼到对应服务的解析页面，用系统浏览器打开 */
+  const WEB_PARSERS = [
+    { name: "dlpanda", label: "🐼 dlpanda", build: (u: string) => `https://dlpanda.com/zh-CN?url=${encodeURIComponent(u)}` },
+    { name: "snaptik", label: "🎵 snaptik", build: (u: string) => `https://snaptik.app/?url=${encodeURIComponent(u)}` },
+    { name: "ssstik",  label: "📥 ssstik",  build: (u: string) => `https://ssstik.io/?url=${encodeURIComponent(u)}` },
+  ] as const;
+
+  async function handleWebParse(parserName: "dlpanda" | "snaptik" | "ssstik") {
+    if (!url.trim()) {
+      show("请先粘贴视频 URL");
+      return;
+    }
+    const p = WEB_PARSERS.find((x) => x.name === parserName);
+    if (!p) return;
+    const target = p.build(url.trim());
+    try {
+      await openInBrowser(target);
+      show(`已在浏览器打开 ${p.label}，解析完成后从浏览器下载`);
+    } catch (e) {
+      show("打开浏览器失败: " + errMsg(e));
+    }
+  }
+
   return (
     <div>
       <div className="card">
@@ -138,6 +162,24 @@ export function DownloadPanel({ urlSeed, defaultSaveDir = "" }: Props) {
           >
             {probeLoading ? "解析中..." : "解析"}
           </button>
+        </div>
+
+        {/* 第三方 Web 解析服务 — 平台反爬时用浏览器绕开 */}
+        <div className="mt-3" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "var(--text-dim)", marginRight: 4 }}>
+            🛟 反爬过不去？用浏览器解析：
+          </span>
+          {WEB_PARSERS.map((p) => (
+            <button
+              key={p.name}
+              className="btn btn-sm"
+              onClick={() => handleWebParse(p.name as "dlpanda" | "snaptik" | "ssstik")}
+              disabled={!url.trim()}
+              style={{ fontSize: 11, padding: "3px 8px" }}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
       </div>
 
