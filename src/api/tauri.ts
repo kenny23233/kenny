@@ -53,6 +53,15 @@ export function openInBrowser(url: string): Promise<void> {
   return invoke<void>("open_in_browser", { url });
 }
 
+/** 在 app 内嵌 webview 打开第三方解析服务（不开外部浏览器） */
+export function openParserWindow(
+  label: string,
+  title: string,
+  url: string,
+): Promise<void> {
+  return invoke<void>("open_parser_window", { label, title, url });
+}
+
 export function listenProgress(
   downloadId: string,
   onEvent: (e: ProgressEvent) => void,

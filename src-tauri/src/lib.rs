@@ -89,6 +89,7 @@ pub fn run() {
             commands::download::start_download,
             commands::download::cancel_download,
             commands::download::open_in_browser,
+            commands::download::open_parser_window,
             commands::cookies::import_cookies,
             commands::cookies::import_cookies_for_domain,
             commands::cookies::list_cookies,

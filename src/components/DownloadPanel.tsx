@@ -6,7 +6,7 @@ import {
   formatBytes,
   formatDuration,
   listenProgress,
-  openInBrowser,
+  openParserWindow,
   pickDefaultFormat,
   probeUrl,
   startDownload,
@@ -119,7 +119,7 @@ export function DownloadPanel({ urlSeed, defaultSaveDir = "" }: Props) {
     }
   }
 
-  /** 第三方解析服务：把当前 URL 拼到对应服务的解析页面，用系统浏览器打开 */
+  /** 第三方解析服务：在 app 内嵌 webview 打开（不开外部浏览器、不弹 cmd） */
   const WEB_PARSERS = [
     { name: "dlpanda", label: "🐼 dlpanda", build: (u: string) => `https://dlpanda.com/zh-CN?url=${encodeURIComponent(u)}` },
     { name: "snaptik", label: "🎵 snaptik", build: (u: string) => `https://snaptik.app/?url=${encodeURIComponent(u)}` },
@@ -135,10 +135,13 @@ export function DownloadPanel({ urlSeed, defaultSaveDir = "" }: Props) {
     if (!p) return;
     const target = p.build(url.trim());
     try {
-      await openInBrowser(target);
-      show(`已在浏览器打开 ${p.label}，解析完成后从浏览器下载`);
+      await openParserWindow(
+        `parser-${parserName}`,
+        `Web 解析 — ${p.label}`,
+        target,
+      );
     } catch (e) {
-      show("打开浏览器失败: " + errMsg(e));
+      show("打开解析窗口失败: " + errMsg(e));
     }
   }
 

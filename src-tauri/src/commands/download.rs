@@ -226,9 +226,12 @@ pub async fn open_in_browser(url: String) -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
-        // Windows: 用 rundll32 调 url.dll 打开默认浏览器
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        // Windows: 用 rundll32 调 url.dll 打开默认浏览器，CREATE_NO_WINDOW 防止弹 cmd
         std::process::Command::new("rundll32")
             .args(["url.dll,FileProtocolHandler", &url])
+            .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| format!("打开浏览器失败: {}", e))?;
     }
@@ -246,6 +249,38 @@ pub async fn open_in_browser(url: String) -> Result<(), String> {
             .spawn()
             .map_err(|e| format!("打开浏览器失败: {}", e))?;
     }
+
+    Ok(())
+}
+
+/// 在 app 内嵌 webview 打开第三方解析服务（不开外部浏览器，不弹 cmd）
+/// 用 Tauri 的 WebviewWindow 加载 dlpanda.com / ssstik 等，URL 已自动预填
+#[tauri::command]
+pub async fn open_parser_window(
+    app: tauri::AppHandle,
+    label: String,
+    title: String,
+    url: String,
+) -> Result<(), String> {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+
+    if url.trim().is_empty() {
+        return Err("URL 不能为空".to_string());
+    }
+    tracing::info!("open_parser_window: {} -> {}", label, url);
+
+    // 如果同名窗口已存在，先关闭
+    if let Some(existing) = app.get_webview_window(&label) {
+        let _ = existing.close();
+    }
+
+    WebviewWindowBuilder::new(&app, &label, WebviewUrl::External(url.parse().map_err(|e| format!("URL 解析失败: {}", e))?))
+        .title(title)
+        .inner_size(960.0, 720.0)
+        .min_inner_size(640.0, 480.0)
+        .resizable(true)
+        .build()
+        .map_err(|e| format!("创建解析窗口失败: {}", e))?;
 
     Ok(())
 }
