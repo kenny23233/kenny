@@ -84,6 +84,11 @@ export function deleteCookies(domain: string): Promise<void> {
   return invoke<void>("delete_cookies", { domain });
 }
 
+/** 从老版本（便携版）一键导入 douyin + youtube cookies */
+export function importLegacyCookies(legacyRoot: string): Promise<string[]> {
+  return invoke<string[]>("import_legacy_cookies", { legacyRoot });
+}
+
 // ---- 历史 ----
 export function listHistory(limit = 100): Promise<HistoryEntry[]> {
   return invoke<HistoryEntry[]>("list_history", { limit });

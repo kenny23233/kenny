@@ -42,6 +42,27 @@ export function DownloadPanel({ urlSeed, defaultSaveDir = "" }: Props) {
     }
   }, [urlSeed]);
 
+  // 同步 URL 到嵌入式 Web 解析窗口 — 输入 URL 自动唤起 dlpanda
+  const lastAutoUrlRef = useRef<string>("");
+  useEffect(() => {
+    const u = url.trim();
+    if (!u) return;
+    if (u === lastAutoUrlRef.current) return;
+    if (!/^https?:\/\//i.test(u)) return;
+    // 简单的 debounce：500ms 内不重复触发
+    const t = window.setTimeout(() => {
+      lastAutoUrlRef.current = u;
+      openParserWindow(
+        "parser-dlpanda-auto",
+        `Web 解析 — dlpanda (自动)`,
+        `https://dlpanda.com/zh-CN?url=${encodeURIComponent(u)}`,
+      ).catch(() => {
+        // 静默失败 — 用户可以手动点 dlpanda 按钮
+      });
+    }, 500);
+    return () => window.clearTimeout(t);
+  }, [url]);
+
   async function handleProbe() {
     if (!url.trim()) return;
     setProbeLoading(true);

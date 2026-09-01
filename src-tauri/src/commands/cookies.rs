@@ -130,6 +130,56 @@ pub async fn list_cookies(
     list_cookies_impl(&snapshot)
 }
 
+/// 从老版本（便携版/旧版 Video Toolbox）一键导入 cookies
+/// 老版本的固定布局：<legacy_root>/ytdl/tools/douyin_cookies.txt
+///                       <legacy_root>/ytdl/tools/yt_cookies.txt
+/// 把这两个文件分别复制成 douyin.com.txt 和 youtube.com.txt
+#[tauri::command]
+pub async fn import_legacy_cookies(
+    legacy_root: String,
+    config: State<'_, Arc<ConfigState>>,
+) -> Result<Vec<String>, String> {
+    let legacy = PathBuf::from(&legacy_root);
+    if !legacy.exists() {
+        return Err(format!("路径不存在: {}", legacy_root));
+    }
+
+    let tools_dir = legacy.join("ytdl").join("tools");
+    let dd_src = tools_dir.join("douyin_cookies.txt");
+    let yt_src = tools_dir.join("yt_cookies.txt");
+
+    let snapshot = config.snapshot().map_err(|e| format!("读取配置失败: {}", e))?;
+    let cookies_dir = snapshot.cookies_dir();
+    std::fs::create_dir_all(&cookies_dir).map_err(|e| e.to_string())?;
+
+    let mut imported = Vec::new();
+
+    if dd_src.exists() {
+        let dest = cookies_dir.join("douyin.com.txt");
+        std::fs::copy(&dd_src, &dest)
+            .map_err(|e| format!("复制 douyin cookies 失败: {}", e))?;
+        imported.push(format!("douyin.com.txt ← {}", dd_src.display()));
+        tracing::info!("imported legacy douyin cookies: {}", dd_src.display());
+    }
+
+    if yt_src.exists() {
+        let dest = cookies_dir.join("youtube.com.txt");
+        std::fs::copy(&yt_src, &dest)
+            .map_err(|e| format!("复制 youtube cookies 失败: {}", e))?;
+        imported.push(format!("youtube.com.txt ← {}", yt_src.display()));
+        tracing::info!("imported legacy youtube cookies: {}", yt_src.display());
+    }
+
+    if imported.is_empty() {
+        return Err(format!(
+            "在 {} 没找到 ytdl/tools/douyin_cookies.txt 或 yt_cookies.txt",
+            legacy.display()
+        ));
+    }
+
+    Ok(imported)
+}
+
 /// 删除指定域名的 cookies
 #[tauri::command]
 pub async fn delete_cookies(

@@ -6,6 +6,7 @@ import {
   formatBytes,
   formatDate,
   importCookies,
+  importLegacyCookies,
   listCookies,
 } from "../api/tauri";
 import type { CookieInfo } from "../types/tauri";
@@ -48,6 +49,23 @@ export function CookiesPanel() {
     }
   }
 
+  /** 从老版本（便携版/旧 Video Toolbox）一键导入 douyin + youtube cookies */
+  async function handleImportLegacy() {
+    try {
+      const folder = await openDialog({
+        directory: true,
+        multiple: false,
+        title: "选择老版本根目录 (含 ytdl/tools/ 的那一层)",
+      });
+      if (typeof folder !== "string") return;
+      const imported = await importLegacyCookies(folder);
+      show(`已从老版本导入 ${imported.length} 个 cookies: ${imported.join(", ")}`);
+      await refresh();
+    } catch (e) {
+      show("老版本导入失败: " + errMsg(e) + " — 确认选了带 ytdl/tools/ 的根目录");
+    }
+  }
+
   async function handleDelete(domain: string) {
     if (!confirm(`确认删除 ${domain} 的 cookies?`)) return;
     try {
@@ -69,6 +87,9 @@ export function CookiesPanel() {
           <div className="row">
             <button className="btn btn-primary" onClick={handleImport}>
               导入 Cookies 文件
+            </button>
+            <button className="btn" onClick={handleImportLegacy} title="从老版本（便携版）一键导入 douyin + youtube cookies">
+              📦 从老版本导入
             </button>
             <button className="btn" onClick={refresh} disabled={loading}>
               {loading ? "刷新中..." : "刷新"}

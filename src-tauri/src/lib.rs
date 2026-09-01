@@ -94,6 +94,7 @@ pub fn run() {
             commands::cookies::import_cookies_for_domain,
             commands::cookies::list_cookies,
             commands::cookies::delete_cookies,
+            commands::cookies::import_legacy_cookies,
             commands::history::list_history,
             commands::history::delete_history,
             commands::history::clear_history,
